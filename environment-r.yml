@@ -1,0 +1,35 @@
+# Conda packages for the R side of the benchmark (RECOMMENDED — pre-built, no
+# source compilation). Add them to the SAME env as SAGE so Python and Rscript
+# share a PATH:
+#     conda env update -n sage -f environment-r.yml
+# (Or, for a standalone R env:  conda env create -f environment-r.yml && conda activate sdm-r)
+#
+# This installs everything the R scripts need EXCEPT three packages that are not on
+# conda-forge. If you run the data-prep steps, add them after creating the env:
+#     Rscript -e 'install.packages(c("remotes","CoordinateCleaner"))'
+#     Rscript -e 'remotes::install_github(c("matildabrown/rWCVP","barnabywalker/kewr"))'
+# (CoordinateCleaner is needed only by scripts/data_prep_scripts/cleaning_gbif.r; it was
+# removed from conda-forge, so it comes from CRAN. The MaxEnt baseline does not need it.)
+#
+# (Non-conda users can try `Rscript install.R`, but CRAN source builds of sf /
+# rgbif / tidyverse need system libraries — GDAL/GEOS/PROJ, libxml2, harfbuzz —
+# which this conda env provides automatically. The conda route is much smoother.)
+name: sdm-r
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.5            # paper used R 4.5.3 (with maxnet 0.1.4, glmnet 5.0)
+  # R evaluation tool (scripts/evaluate_predictions.R)
+  - r-hdf5r
+  - r-ggplot2
+  # MaxEnt baselines + data-prep R scripts
+  - r-maxnet
+  - r-sf
+  - r-data.table
+  - r-dplyr
+  - r-tidyverse
+  - r-pbapply
+  - r-future.apply
+  - r-countrycode
+  - r-rgbif
+  - r-remotes

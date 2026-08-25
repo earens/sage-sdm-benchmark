@@ -1,0 +1,20 @@
+# DataModule config for the 50-species demo dataset.
+# Range masking is off and PO occurrences are
+# not further subsampled (the demo data is already a ~30k-cell subset).
+data:
+  class_path: data_modules.datamodule.DataModule
+  init_args:
+    train_dataset: "train"
+    aggregated: True
+    predictors_subset:
+      location: [0, 1]
+      chelsa: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+      soilgrids: [0, 1, 2, 3, 4, 5, 6, 7]
+      topography: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+      human_footprint: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    po_range_mask: false
+    pa_range_mask: false
+    subsample_indices_file: null
+    batch_size: 256
+    num_workers: 2
+    pin_memory: false

@@ -1,0 +1,80 @@
+model:
+  class_path: src.modules.lightning_module.LightningModule
+  init_args:
+    net:
+      class_path: models.SimpleMLP
+      init_args:
+        num_classes: 0  # Dynamically set from species_names.csv in main.py
+        hidden_dim: 512
+        num_blocks: 4
+        use_location: false
+    loss:
+      class_path: criteria.bce.BCE
+      init_args:
+        lambda_1: 1.0
+        lambda_2: 0.5 
+    species_weighting:
+      method: uniform
+
+    
+    metrics:
+      train: {}
+        
+      val:
+        auroc:
+          class_path: torchmetrics.classification.MultilabelAUROC
+          init_args:
+            num_labels: 0  # Dynamically set from species_names.csv
+            average: macro
+            ignore_index: -1
+        auprg:
+          class_path: src.metrics.precision_recall_gain.MultilabelAUPRG
+          init_args:
+            num_labels: 0  # Dynamically set from species_names.csv
+            average: macro
+            ignore_index: -1
+
+      test:
+        auroc:
+          class_path: torchmetrics.classification.MultilabelAUROC
+          init_args:
+            num_labels: 0  # Dynamically set from species_names.csv
+            average: null
+            ignore_index: -1
+        auprg:
+          class_path: src.metrics.precision_recall_gain.MultilabelAUPRG
+          init_args:
+            num_labels: 0  # Dynamically set from species_names.csv
+            average: null
+            #thresholds: 10
+            ignore_index: -1
+    #for the visuals
+    continent_map_configs: 
+        - continent: "europe"
+          species_ids: [4425]
+      # - continent: "australia"
+      #   species_ids: [11]
+      #  - continent: "africa"
+      #    species_ids: [1101]
+      #   res: 0.2
+      #  - continent: "asia"
+      #    species_ids: [2713, 1949]
+      # - continent: "south_america"
+      #   species_ids: [102]
+      # - continent: "north_america"
+      #   species_ids: [223]  
+     
+
+optimizer:
+  class_path: torch.optim.AdamW
+  init_args:
+    lr: 0.0001
+    weight_decay: 1e-6
+
+lr_scheduler:
+  class_path: pytorch_lightning.cli.ReduceLROnPlateau
+  init_args:
+    mode: max
+    factor: 0.5
+    patience: 5
+    monitor: val/auroc

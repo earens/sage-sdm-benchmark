@@ -1,0 +1,57 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SAGE — paper models.
+#
+# Every reported model is trained with 5 random seeds;
+#
+#   <model>_s<seed>/
+#     test_predictions.h5     predicted probabilities on the test split (ALL 50 runs)
+#     metrics_by_species.h5   per-species test AUROC and AUPRG (ALL 50 runs)
+#     checkpoints/best.ckpt   trained checkpoint (the 25 deep runs only; ORIGIN.txt
+#                             beside it records the epoch-named file training wrote)
+#     config.yaml             resolved run config (the 25 deep runs only)
+#   eval_test_targets.h5      shared ground truth; every run aligns to it. The model
+#                             record's copy also carries `locations` (plot coordinates);
+#                             the data record's copy is targets-only.
+#
+# Download + extraction (which tar holds what, how to pull a single run):
+#   docs/MODELS.md -> "The released runs (model record)"
+#
+# Extract the record under your `log_dir` and evaluate or compare any of these
+# with the same toolkit the tutorials use (ground truth is passed separately):
+#
+#   python scripts/evaluate_predictions.py \
+#       --predictions optimized_deepsdm_s0/test_predictions.h5 \
+#       --reference   baseline_deepsdm_s0/test_predictions.h5 \
+#       --targets     eval_test_targets.h5 \
+#       --data-dir    <data_dir> --output-dir results/
+#
+# The DeepSDMs form a bias-correction ablation ladder — each row adds one
+# established practice on top of the previous, ending in the Optimized DeepSDM.
+# ─────────────────────────────────────────────────────────────────────────────
+
+models:
+
+  # ── Traditional single-species baselines (one model per species) ──
+  MaxEnt:
+    note: MaxEnt (maxnet), target-group background
+    runs: [maxent_s0, maxent_s1, maxent_s2, maxent_s3, maxent_s4]
+  Random Forest:
+    note: down-sampled Random Forest (Valavi et al. 2021), target-group background
+    runs: [randomforest_s0, randomforest_s1, randomforest_s2, randomforest_s3, randomforest_s4]
+
+  # ── Multi-species DeepSDMs ──
+  Baseline DeepSDM:
+    note: plain DeepSDM, no bias correction
+    runs: [baseline_deepsdm_s0, baseline_deepsdm_s1, baseline_deepsdm_s2, baseline_deepsdm_s3, baseline_deepsdm_s4]
+  "+Aggregation":
+    note: + 1 km equal-area aggregation of occurrences
+    runs: [aggregation_s0, aggregation_s1, aggregation_s2, aggregation_s3, aggregation_s4]
+  "+Subsampling":
+    note: + occurrence subsampling (N = 1000 per species)
+    runs: [subsampling_s0, subsampling_s1, subsampling_s2, subsampling_s3, subsampling_s4]
+  "+Architecture":
+    note: + ResNet architecture
+    runs: [architecture_s0, architecture_s1, architecture_s2, architecture_s3, architecture_s4]
+  Optimized DeepSDM:
+    note: + loss reweighting (the best model; includes all corrections above)
+    runs: [optimized_deepsdm_s0, optimized_deepsdm_s1, optimized_deepsdm_s2, optimized_deepsdm_s3, optimized_deepsdm_s4]

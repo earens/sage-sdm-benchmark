@@ -1,0 +1,38 @@
+# Traditional single-species SDM config (GLM / GAM / RF / BRT).
+# Maxent is trained separately via the maxnet R pipeline (maxent_train.R).
+#
+# Protocol per model (TGB background only):
+#   1. 3 reference runs (seed 0) over the hyperparameter grid, each with a unique
+#      `config_tag` (so run dirs don't collide).
+#   2. select_reg_param.py picks, per species, the grid value with the best
+#      val_auroc -> <model>_tgb_param.csv.
+#   3. 5 final runs (seeds 0-4) with `per_species_param_file` set to that CSV.
+#   4. aggregate_seed_results.py -> mean ± std test metrics.
+#
+# Per-model grids (set `model_params.<param>` + `config_tag` per reference run):
+#   glm          : C  in {0.001, 0.01, 0.1}          (lasso; smaller C = stronger reg, lambda=1/C)
+#   gam          : lam in {1, 10, 100}               (smoothing; larger lam = stronger; n_splines 10)
+#   randomforest : max_features in {7, 17, 26}       (mtry ~ sqrt(p)/p3/p2 for 52)
+#   brt          : tc in {1, 3, 5}                    (-> num_leaves tc+1)
+
+model: glm
+
+use_location: false          
+species_ids: all
+bg_type: tgb                 # TGB only 
+seed: 0
+train_cap: 10_000
+num_workers: 4               # n_jobs for the estimator + DataLoader workers
+skip_existing: true
+normalize_predictors: true   
+
+# Hyperparameters forwarded to the estimator builder. For a reference run, set the
+# single swept value here and give the run a matching `config_tag`.
+model_params:
+  C: 0.01                    # glm: lasso strength (grid 0.001/0.01/0.1)
+  # gam:          {n_splines: 10, lam: 10}     # grid lam 1/10/100
+  # randomforest: {n_estimators: 1000, max_features: 7}
+  # brt:          {tc: 3}
+
+# config_tag: C0p01                # set per reference run, e.g. C0p001 / C0p01 / C0p1
+# per_species_param_file:          # set for the final 5-seed runs (from select_reg_param.py)

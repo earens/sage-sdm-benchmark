@@ -1,0 +1,8 @@
+model: maxent 
+species_ids: all
+bg_type: tgb  #tgb, random
+seed: 0
+train_cap: 10_000
+num_workers: 16
+skip_existing: true
+normalize_predictors: true  

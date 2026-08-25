@@ -1,0 +1,17 @@
+# Random Forest (down-sampled, Valavi et al. 2021) — single-species SDM.
+# Train one species-range with:
+#   python scripts/traditional_sdms/sklearn_train.py <start> <end> --config configs/model/randomforest.yaml
+model: randomforest
+
+use_location: false            
+species_ids: all
+bg_type: tgb                   # target-group background
+seed: 0
+train_cap: 10_000
+num_workers: 4
+skip_existing: true
+normalize_predictors: true     
+
+model_params:
+  n_estimators: 1000
+  max_features: 7        # mtry (grid 7/17/26 in the paper)

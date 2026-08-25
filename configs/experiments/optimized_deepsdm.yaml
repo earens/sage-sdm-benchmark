@@ -1,0 +1,35 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Optimized DeepSDM: +Architecture with the tuned loss
+# (lambda_1=8.0, lambda_2=1.0) and inversely-proportional-sqrt species weighting.
+# Includes all bias-correction steps above (see configs/paper_runs.yaml).
+#
+#     python src/main.py --exp optimized_deepsdm fit
+# ─────────────────────────────────────────────────────────────────────────────
+
+data_config: datamodule
+model_config: resnet      # ResNet
+
+seed_everything: 0
+trainer:
+  max_epochs: 250
+  logger:
+    init_args:
+      id:
+
+model:
+  init_args:
+    net:
+      init_args:
+        hidden_dim: 1024
+        num_blocks: 8
+    loss:
+      init_args:
+        lambda_1: 8.0
+        lambda_2: 1.0
+    species_weighting:
+      method: inversely_proportional_sqrt
+
+data:
+  init_args:
+    aggregated: true
+    subsample_indices_file: subsample_indices/train_indices_1000_1km.npy

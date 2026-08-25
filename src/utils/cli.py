@@ -1,0 +1,151 @@
+"""LightningCLI integration for the SDM benchmark.
+
+Extends ``LightningCLI`` to save the resolved config into the WandB run directory
+and mirror optimizer / lr-scheduler / model hyperparameters into the WandB run.
+"""
+
+import os
+import warnings
+from typing import Any
+
+from lightning_fabric.utilities.cloud_io import get_filesystem
+from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning.cli import (
+    LightningArgumentParser,
+    LightningCLI,
+    SaveConfigCallback,
+)
+from pytorch_lightning.loggers import Logger
+
+
+class WandbSaveConfigCallback(SaveConfigCallback):
+    """Saves the resolved config into ``<log_dir>/<name>/<version>/`` and logs
+    optimizer / lr-scheduler / model hyperparameters to the WandB run(s)."""
+
+    def setup(self, trainer: Trainer, pl_module: LightningModule, stage: str) -> None:
+        if self.already_saved:
+            return
+
+        log_dir = trainer.log_dir  # this broadcasts the directory
+        if trainer.logger is not None and trainer.logger.name is not None and trainer.logger.version is not None:
+            log_dir = os.path.join(log_dir, trainer.logger.name, str(trainer.logger.version))
+        config_path = os.path.join(log_dir, self.config_filename)
+        fs = get_filesystem(log_dir)
+
+        if not self.overwrite:
+            # check if the file exists on rank 0
+            file_exists = fs.isfile(config_path) if trainer.is_global_zero else False
+            # broadcast whether to fail to all ranks
+            file_exists = trainer.strategy.broadcast(file_exists)
+            if file_exists:
+                raise RuntimeError(
+                    f"{self.__class__.__name__} expected {config_path} to NOT exist. Aborting to avoid overwriting"
+                    " results of a previous run. You can delete the previous config file,"
+                    " set `LightningCLI(save_config_callback=None)` to disable config saving,"
+                    ' or set `LightningCLI(save_config_kwargs={"overwrite": True})` to overwrite the config file.'
+                )
+
+        # save the file on rank 0
+        if trainer.is_global_zero:
+            # save only on rank zero to avoid race conditions.
+            # the `log_dir` needs to be created as we rely on the logger to do it usually
+            # but it hasn't logged anything at this point
+            fs.makedirs(log_dir, exist_ok=True)
+            self.parser.save(
+                self.config, config_path, skip_none=False, overwrite=self.overwrite, multifile=self.multifile
+            )
+            self.already_saved = True
+            # save optimizer, lr scheduler, and model hyperparams
+            for _logger in trainer.loggers:
+                if isinstance(_logger, Logger):
+                    config = {}
+                    if "optimizer" in self.config:
+                        config["optimizer"] = {
+                            k.replace("init_args.", ""): v for k, v in dict(self.config["optimizer"]).items()
+                        }
+                    if "lr_scheduler" in self.config:
+                        config["lr_scheduler"] = {
+                            k.replace("init_args.", ""): v for k, v in dict(self.config["lr_scheduler"]).items()
+                        }
+                    # Log model architecture & loss hyperparams
+                    try:
+                        model_cfg = self.config["model"]
+                        net_cfg = model_cfg.get("init_args", {}).get("net", {})
+                        net_args = dict(net_cfg.get("init_args", {}))
+                        # Log all net args except num_classes (auto-set, not a hyperparameter)
+                        for key, val in net_args.items():
+                            if key != "num_classes":
+                                config[key] = val
+                        # Log model class so runs across architectures are distinguishable
+                        net_class = net_cfg.get("class_path", "")
+                        if net_class:
+                            config["net"] = net_class.split(".")[-1]
+                        loss_args = dict(model_cfg.get("init_args", {}).get("loss", {}).get("init_args", {}))
+                        for key in ("lambda_1", "lambda_2"):
+                            if key in loss_args:
+                                config[key] = loss_args[key]
+                        sw = model_cfg.get("init_args", {}).get("species_weighting", {})
+                        if isinstance(sw, dict) and "method" in sw:
+                            config["species_weighting"] = sw["method"]
+                    except Exception:
+                        pass  # don't crash if config structure differs
+                    config["seed"] = self.config.get("seed_everything", 0)
+                    _logger.log_hyperparams(config)
+
+        # broadcast so that all ranks are in sync on future calls to .setup()
+        self.already_saved = trainer.strategy.broadcast(self.already_saved)
+
+
+class CustomLightningCLI(LightningCLI):
+    """LightningCLI subclass that wires in ``WandbSaveConfigCallback`` and runs
+    ``test`` automatically after ``fit`` when ``test_after_fit`` is set."""
+
+    def __init__(
+        self,
+        save_config_callback: type[SaveConfigCallback] | None = WandbSaveConfigCallback,
+        parser_kwargs: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            save_config_callback=save_config_callback,
+            parser_kwargs=parser_kwargs,
+            **kwargs
+        )
+
+    def add_arguments_to_parser(self, parser: LightningArgumentParser) -> None:
+        parser.add_argument("--ignore_warnings", default=False, type=bool, help="Ignore warnings")
+        parser.add_argument("--test_after_fit", default=True, type=bool,
+                            help="Run test on the best checkpoint after training")
+
+    def before_instantiate_classes(self) -> None:
+        # self.subcommand is None when the CLI is used with run=False (e.g. main.py's
+        # robust `test --ckpt_path` path builds the classes without a subcommand).
+        config = self.config if self.subcommand is None else self.config[self.subcommand]
+        if config.get("ignore_warnings"):
+            warnings.filterwarnings("ignore")
+
+    def after_fit(self) -> None:
+        if self.config.fit.get("test_after_fit") and not os.environ.get("DEBUG", False):
+            self._run_subcommand("test")
+
+    def before_test(self) -> None:
+        if self.trainer.checkpoint_callback and self.trainer.checkpoint_callback.best_model_path:
+            tested_ckpt_path = self.trainer.checkpoint_callback.best_model_path
+        elif self.config_init[self.config_init["subcommand"]]["ckpt_path"]:
+            return
+        else:
+            tested_ckpt_path = None
+        self.config_init[self.config_init["subcommand"]]["ckpt_path"] = tested_ckpt_path
+
+    def _prepare_subcommand_kwargs(self, subcommand: str) -> dict[str, Any]:
+        """Prepares the keyword arguments to pass to the subcommand to run."""
+        fn_kwargs = {
+            k: v
+            for k, v in self.config_init[self.config_init["subcommand"]].items()
+            if k in self._subcommand_method_arguments[subcommand]
+        }
+        fn_kwargs["model"] = self.model
+        if self.datamodule is not None:
+            fn_kwargs["datamodule"] = self.datamodule
+        return fn_kwargs
+

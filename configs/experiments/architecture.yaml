@@ -1,0 +1,34 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# +Architecture — +Subsampling with the ResNet architecture (1024-wide, 8 blocks)
+# in place of the plain MLP (see configs/paper_runs.yaml).
+#
+#     python src/main.py --exp architecture fit
+# ─────────────────────────────────────────────────────────────────────────────
+
+data_config: datamodule
+model_config: resnet      # ResNet
+
+seed_everything: 0
+trainer:
+  max_epochs: 250
+  logger:
+    init_args:
+      id:
+
+model:
+  init_args:
+    net:
+      init_args:
+        hidden_dim: 1024
+        num_blocks: 8
+    loss:
+      init_args:
+        lambda_1: 1.0
+        lambda_2: 0.5
+    species_weighting:
+      method: uniform
+
+data:
+  init_args:
+    aggregated: true
+    subsample_indices_file: subsample_indices/train_indices_1000_1km.npy

@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Demo experiment — trains a lightweight DeepSDM MLP on a 50-species
+# subset in examples/demo_data/, so the whole pipeline runs end-to-end on CPU
+# without downloading the full SAGE data:
+#
+#     python src/main.py --exp demo fit
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Layers to build on: which data config and which model config to merge in.
+data_config: demo          # configs/data/demo.yaml      — the demo dataset + loader
+model_config: demo_mlp     # configs/model/demo_mlp.yaml — a small MLP
+
+# Train on the demo data instead of the full dataset from local_default.yaml.
+# Path is relative to the repo root.
+data_dir: examples/demo_data/
+
+# Run-specific overrides — everything else (predictors, loss, metrics) is inherited.
+seed_everything: 0
+trainer:
+  max_epochs: 10           # a short run;
+  accelerator: cpu         # finishes in a couple of minutes on a laptop
+  logger:
+    init_args:
+      id:                  

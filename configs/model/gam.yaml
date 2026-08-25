@@ -1,0 +1,17 @@
+# GAM (logistic, cubic P-splines via pyGAM) — single-species SDM.
+# Train one species-range with:
+#   python scripts/traditional_sdms/sklearn_train.py <start> <end> --config configs/model/gam.yaml
+model: gam
+
+use_location: false            
+species_ids: all
+bg_type: tgb                   # target-group background
+seed: 0
+train_cap: 10_000
+num_workers: 4
+skip_existing: true
+normalize_predictors: true     
+
+model_params:
+  n_splines: 10
+  lam: 10                # smoothing strength (grid 1/10/100)

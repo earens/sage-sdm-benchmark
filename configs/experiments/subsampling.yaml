@@ -1,0 +1,21 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# +Subsampling — +Aggregation with occurrences subsampled to 1000 per species
+# (see configs/paper_runs.yaml).
+#
+#     python src/main.py --exp subsampling fit
+# ─────────────────────────────────────────────────────────────────────────────
+
+data_config: datamodule
+model_config: simple_mlp     # SimpleMLP 512x4, BCE (lambda_1=1.0, lambda_2=0.5), uniform weighting
+
+seed_everything: 0
+trainer:
+  max_epochs: 250
+  logger:
+    init_args:
+      id:
+
+data:
+  init_args:
+    aggregated: true
+    subsample_indices_file: subsample_indices/train_indices_1000_1km.npy

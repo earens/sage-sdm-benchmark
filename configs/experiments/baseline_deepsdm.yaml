@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Baseline DeepSDM:
+# a plain multi-species MLP on non-aggregated presence-only data, no bias
+# correction (see configs/paper_runs.yaml).
+#
+#     python src/main.py --exp baseline_deepsdm fit
+# ─────────────────────────────────────────────────────────────────────────────
+
+data_config: datamodule
+model_config: simple_mlp     # SimpleMLP 512x4, BCE (lambda_1=1.0, lambda_2=0.5), uniform weighting
+
+seed_everything: 0
+trainer:
+  max_epochs: 250
+  logger:
+    init_args:
+      id:
+
+data:
+  init_args:
+    aggregated: false                # non-aggregated occurrences
+    subsample_indices_file: null     # no subsampling

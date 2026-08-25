@@ -1,0 +1,14 @@
+# Machine-specific paths. Copy this file to `local_default.yaml` and edit the
+# paths below to match your system. `local_default.yaml` is gitignored so your
+# local paths never get committed.
+#
+#   cp configs/local_default.yaml.example configs/local_default.yaml
+#
+# `data_dir`  Root directory holding the processed data (the HDF5 files produced
+#             by scripts/data_prep_scripts/, or downloaded from the data release).
+#             Must end with a trailing slash.
+# `log_dir`   Root directory for experiment logs and checkpoints.
+
+data_dir: /path/to/sdm_benchmark/data/
+
+log_dir: /path/to/sdm_benchmark/logs/

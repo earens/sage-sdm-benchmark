@@ -1,0 +1,19 @@
+# to execute this experiment run:
+# python src/main.py --exp test fit 
+# "fit" can be replaced by other subcommands supported by LightningCLI
+
+# define configs to merge
+data_config: datamodule
+model_config: resnet
+
+# define any variables to overwrite in configs given above or default.yaml
+seed_everything: 0
+trainer:
+  max_epochs: 250
+  #limit_train_batches: 1000  
+  logger:
+    init_args:
+      # name in logs directory and in wandb
+      # will be random string if not specified
+      id:
+

@@ -1,0 +1,12 @@
+# Dependencies now live in pyproject.toml, grouped into optional-dependency extras.
+# This file is a compatibility shim so `pip install -r requirements.txt` still works
+# (it installs the full Python stack, editable). Prefer installing directly:
+#
+#   pip install -e .            # minimal core (train / evaluate, score predictions)
+#   pip install -e ".[all]"     # everything on the Python side
+#
+# R is separate (MaxEnt / data-prep) — see install.R or environment-r.yml.
+# For the EXACT versions the paper ran on, use requirements-lock.txt instead.
+# Install PyTorch first if you need a specific CUDA/CPU build (see the README).
+
+-e .[all]
