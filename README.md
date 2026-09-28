@@ -2,6 +2,8 @@
 
 # SAGE: A Sampling-Aware Global Evaluation Benchmark for Species Distribution Modeling
 
+[![arXiv](https://img.shields.io/badge/arXiv-2609.31082-b31b1b.svg)](https://arxiv.org/abs/2609.31082)
+[![Project page](https://img.shields.io/badge/Project_page-earens.github.io%2Fsage-2E7D32.svg)](https://earens.github.io/sage/)
 [![Pytorch](https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/get-started/locally/)
 [![Pytorch Lightning](https://img.shields.io/badge/-Lightning-ffffff?logo=data:image/svg%2bxml;base64,PHN2ZyB3aWR0aD0iNDEiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0MSA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIwLjQ5OTIgMEwwIDEyVjM2TDIwLjUgNDhMNDEgMzZWMTJMMjAuNDk5MiAwWk0xNi45NTAxIDM2LjAwMTZMMTkuMTA4OSAyNi42ODU2TDE0LjI1NDggMjEuODkyTDI0LjA3OTEgMTEuOTk5MkwyMS45MTYzIDIxLjMyOTZMMjYuNzQ0NCAyNi4wOTc2TDE2Ljk1MDEgMzYuMDAxNloiIGZpbGw9IiM3OTJFRTUiLz4KPC9zdmc+Cg==)](https://lightning.ai/docs/pytorch/stable/)
 [![WandB](https://img.shields.io/badge/Weights_%26_Biases-FFBE00?logo=weightsandbiases&logoColor=white)](https://wandb.ai/)
@@ -291,11 +293,14 @@ Hands-on notebooks for deeper dives, each running against the demo data or the f
 If you use this benchmark, please cite the accompanying paper:
 
 ```bibtex
-@article{TBD,
-  title  = {{SAGE}: A sampling-aware global evaluation benchmark for species distribution modeling},
-  author = {Arens, Emilia and van Tiel, Nina and Zbinden, Robin and Robert, Damien and Drees, Lukas and Vanalli, Chiara and Kellenberger, Benjamin and Zimmermann, Niklaus E. and Pellissier, Loïc and Tuia, Devis and Wegner, Jan Dirk},
-  year   = {TBD},
-  note   = {Preprint / venue TBD}
+@misc{arens2026sagesamplingawareglobalevaluation,
+      title={SAGE: A sampling-aware global evaluation benchmark for species distribution modeling},
+      author={Emilia Arens and Nina van Tiel and Robin Zbinden and Damien Robert and Lukas Drees and Chiara Vanalli and Benjamin Kellenberger and Niklaus E. Zimmermann and Loïc Pellissier and Devis Tuia and Jan Dirk Wegner},
+      year={2026},
+      eprint={2609.31082},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2609.31082},
 }
 ```
 
